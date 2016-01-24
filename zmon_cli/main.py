@@ -285,6 +285,7 @@ def delete(url):
     response.raise_for_status()
     return response
 
+
 def delete_body(url, body):
     data = get_config_data()
     response = request(requests.delete, url, data=body,
@@ -295,6 +296,7 @@ def delete_body(url, body):
         return get(url)
     response.raise_for_status()
     return response
+
 
 @cli.group()
 @click.pass_context
