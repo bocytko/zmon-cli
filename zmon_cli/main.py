@@ -285,6 +285,16 @@ def delete(url):
     response.raise_for_status()
     return response
 
+def delete_body(url, body):
+    data = get_config_data()
+    response = request(requests.delete, url, data=body,
+                       headers={'content-type': 'application/json'})
+    if response.status_code == 401:
+        clickclick.error("Authorization failed")
+        data['password'] = query_password(data['user'])
+        return get(url)
+    response.raise_for_status()
+    return response
 
 @cli.group()
 @click.pass_context
@@ -377,6 +387,26 @@ def updateAlertDef(yaml_file):
 def check_definitions(ctx):
     """manage check definitions"""
     pass
+
+
+@check_definitions.command("delete")
+@click.argument('yaml_file', type=click.File('rb'))
+def delete_check_definition(yaml_file):
+    """delete a single check definition"""
+    data = get_config_data()
+
+    check = yaml.safe_load(yaml_file)
+    check['last_modified_by'] = data.get('user', 'unknown')
+    if 'status' not in check:
+        check['status'] = 'ACTIVE'
+
+    action('Deleting check definition... ')
+
+    r = delete_body('/check-definitions', json.dumps(check))
+    if r.status_code != 200:
+        error(r.text)
+    r.raise_for_status()
+    ok('OK')
 
 
 @check_definitions.command("update")
